@@ -1,9 +1,9 @@
 
-# Synthetic Market Data Generator
+# Synthetic Market Data Simulator
 
 ## Overview
 
-This project is a synthetic market data generator specifically designed for cryptocurrencies. It simulates real-world cryptocurrency market data, providing a valuable tool for testing and analysis in crypto-related software development.
+This project is a synthetic market data Simulator specifically designed for cryptocurrencies. It simulates real-world cryptocurrency market data, providing a valuable tool for testing and analysis in crypto-related software development.
 
 ## Prerequisites
 
