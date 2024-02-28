@@ -23,7 +23,9 @@ impl MarketMaker {
             return Err("Invalid rate parameters");
         }
 
-        let (sender, receiver) = mpsc::channel(32); // Channel buffer size
+        let buffer_duration_secs = 10; // How many seconds of quotes the buffer should hold
+        let buffer_size = max_rate as usize * buffer_duration_secs;
+        let (sender, receiver) = mpsc::channel(buffer_size);
 
         Ok((
             MarketMaker {
@@ -63,24 +65,42 @@ impl MarketMaker {
     let symbol = rng.gen::<Symbol>();
     let side = rng.gen::<Side>();
 
-    let (base_price, fluctuation_range) = match symbol {
-        Symbol::BTCUSD => (50_000.0, 0.05), // Base price of 35,000 with ±5% fluctuation
-        Symbol::ETHUSD => (1_850.0, 0.05),  // Base price of 1,250 with ±5% fluctuation
-        Symbol::ETHBTC => (0.035, 0.05),    // Base price of 0.035 with ±5% fluctuation
-    };
+    let base_price: f64;
+    let fluctuation_range = 0.05; // Default fluctuation range
 
-    // Calculate fluctuation
+    // Determine base price based on the symbol.
+    // No need for initial assignment as it's set in all match arms.
+    match symbol {
+        Symbol::BTCUSD => {
+            base_price = 50_000.0; // Set base price for BTCUSD
+        },
+        Symbol::ETHUSD => {
+            base_price = 1_850.0; // Set base price for ETHUSD
+        },
+        Symbol::ETHBTC => {
+            base_price = 0.035; // Set base price for ETHBTC
+        },
+    };
+    // Calculate price fluctuation.
     let fluctuation = rng.gen_range(-fluctuation_range..fluctuation_range) * base_price;
     let price = base_price + fluctuation;
 
+    // Check and adjust final price to ensure it is not negative.
+    if price < 0.0 {
+        panic!("Make sure base price is non-negative and fluctuation percentage isn't above 100%");
+    }
+
+    // Generate a random size for the quote.
     let size = rng.gen_range(0.1..10.0);
     let id = rng.gen::<u64>();
 
+    // Get the current time and convert it to a UNIX timestamp.
     let now = SystemTime::now();
     let ts = now.duration_since(UNIX_EPOCH)
                 .expect("Time went backwards")
-                .as_secs() as i64;
+                .as_secs() as u64;
 
+    // Return a new Quote struct with the generated values.
     Quote {
         ts,
         sym: symbol,
